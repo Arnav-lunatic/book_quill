@@ -81,9 +81,9 @@ class AppDatabase {
         return info.changes > 0;
 	}
 
-    getAllTasks() {
-        const stmt = this.db.prepare("SELECT * FROM tasks ORDER BY id DESC");
-        return stmt.all();
+    getAllTasksFromBook(book_id) {
+        const stmt = this.db.prepare("SELECT * FROM tasks WHERE book_id = ? ORDER BY id DESC");
+        return stmt.all(book_id);
     }
 
     closeDB() {

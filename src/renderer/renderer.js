@@ -28,37 +28,37 @@ async function renderBooks() {
 	const books = await getAllBooks();
 	switch (books.length) {
 		case 1:
-			renderFirstBook(books[0].name);
+			renderFirstBook(books[0]);
 			break;
 		case 2:
-			renderFirstBook(books[1].name);
-			renderSecondBook(books[0].name);
+			renderFirstBook(books[1]);
+			renderSecondBook(books[0]);
 			break;
 		case 3:
-			renderFirstBook(books[2].name);
-			renderSecondBook(books[1].name);
-			renderThirdBook(books[0].name);
+			renderFirstBook(books[2]);
+			renderSecondBook(books[1]);
+			renderThirdBook(books[0]);
 			break;
 		case 4:
-			renderFirstBook(books[3].name);
-			renderSecondBook(books[2].name);
-			renderThirdBook(books[1].name);
-			renderForthBook(books[0].name);
+			renderFirstBook(books[3]);
+			renderSecondBook(books[2]);
+			renderThirdBook(books[1]);
+			renderForthBook(books[0]);
 			break;
 		case 5:
-			renderFirstBook(books[4].name);
-			renderSecondBook(books[3].name);
-			renderThirdBook(books[2].name);
-			renderForthBook(books[1].name);
-			renderFifthBook(books[0].name);
+			renderFirstBook(books[4]);
+			renderSecondBook(books[3]);
+			renderThirdBook(books[2]);
+			renderForthBook(books[1]);
+			renderFifthBook(books[0]);
 			break;
 		case 6:
-			renderFirstBook(books[5].name);
-			renderSecondBook(books[4].name);
-			renderThirdBook(books[3].name);
-			renderForthBook(books[2].name);
-			renderFifthBook(books[1].name);
-			renderSixthBook(books[0].name);
+			renderFirstBook(books[5]);
+			renderSecondBook(books[4]);
+			renderThirdBook(books[3]);
+			renderForthBook(books[2]);
+			renderFifthBook(books[1]);
+			renderSixthBook(books[0]);
 			break;
 	}
 }

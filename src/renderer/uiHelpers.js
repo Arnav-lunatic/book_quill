@@ -1,5 +1,5 @@
-function showTooltip(text, target, bookPixel) {
-	bookPixel.forEach((pixel) => {
+function showTooltip(text, target, bookPixels) {
+	bookPixels.forEach((pixel) => {
 		pixel.addEventListener("mouseenter", function () {
 			let tooltip = document.createElement("div");
 			tooltip.className = "book-tooltip";
