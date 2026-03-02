@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+    import { ipcMain } from 'electron';
 
 export default function setupHandlers(db) {
     ipcMain.handle("books:add", (_, title) => {
@@ -13,19 +13,19 @@ export default function setupHandlers(db) {
         return db.getAllBooks();
     })
 
-    ipcMain.handle("tasks:add", (_, title, description, book_id) => {
-        return db.addTask(title, description, book_id);
+    ipcMain.handle("tasks:add", (_, task, book_id) => {
+        return db.addTask(task, book_id);
     })
 
-    ipcMain.handle("tasks:markComplete", (_, id, isCompleted) => {
-        return db.markComplete(id, isCompleted);
+    ipcMain.handle("tasks:markChecked", (_, id, isChecked) => {
+        return db.markChecked(id, isChecked);
     })
 
     ipcMain.handle("tasks:delete", (_, id) => {
         return db.deleteTask(id);
     })
 
-    ipcMain.handle("tasks:getAll", () => {
-        return db.getAllTasks();
+    ipcMain.handle("tasks:getAllFromBook", (_, book_id) => {
+        return db.getAllTasksFromBook(book_id);
     })
 }

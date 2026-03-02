@@ -12,7 +12,6 @@ if (started) {
 let db;
 
 const createWindow = () => {
-	// Create the browser window.
 	const mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 900,
@@ -21,7 +20,6 @@ const createWindow = () => {
 		},
 	});
 
-	// and load the index.html of the app.
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 		mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
 	} else {

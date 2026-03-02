@@ -19,9 +19,8 @@ class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
+                task TEXT NOT NULL,
                 isChecked BOOLEAN DEFAULT 0,
-                description TEXT,
                 date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                 book_id INTEGER NOT NULL,
 
@@ -51,44 +50,45 @@ class AppDatabase {
 		return stmt.all();
 	}
 
-	addTask(title, description, book_id) {
+	addTask(task, book_id) {
 		const stmt = this.db.prepare(
-			"INSERT INTO tasks (title, description, book_id) VALUES (?, ?, ?)",
+			"INSERT INTO tasks (task, book_id) VALUES (?, ?)",
 		);
-		const info = stmt.run(title, description, book_id);
+		const info = stmt.run(task , book_id);
 		return {
 			id: info.lastInsertRowid,
-			title,
-			description,
+			task: task,
 			isChecked: 0,
 			date_time: info.date_time,
-			book_id,
+			book_id: book_id,
 		};
 	}
 
-	markComplete(id, isCompleted) {
+	markChecked(id, isChecked) {
 		const stmt = this.db.prepare(
-			"UPDATE tasks SET isCompleted = ? WHERE id = ?",
+			"UPDATE tasks SET isChecked = ? WHERE id = ?",
 		);
-		const info = stmt.run(isCompleted, id);
+		const info = stmt.run(isChecked, id);
 		return info.changes > 0;
 	}
 
 	deleteTask(id) {
-        const stmt = this.db.prepare("DELETE FROM tasks WHERE id = ?");
-        const info = stmt.run(id);
+		const stmt = this.db.prepare("DELETE FROM tasks WHERE id = ?");
+		const info = stmt.run(id);
 
-        return info.changes > 0;
+		return info.changes > 0;
 	}
 
-    getAllTasksFromBook(book_id) {
-        const stmt = this.db.prepare("SELECT * FROM tasks WHERE book_id = ? ORDER BY id DESC");
-        return stmt.all(book_id);
-    }
+	getAllTasksFromBook(book_id) {
+		const stmt = this.db.prepare(
+			"SELECT * FROM tasks WHERE book_id = ? ORDER BY id DESC",
+		);
+		return stmt.all(book_id);
+	}
 
-    closeDB() {
-        this.db.close();
-    }
+	closeDB() {
+		this.db.close();
+	}
 }
 
 export default AppDatabase;

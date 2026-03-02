@@ -10,12 +10,13 @@ contextBridge.exposeInMainWorld("books", {
     
     getAllBook: () => ipcRenderer.invoke("books:getAll"),
     
-	addTask: (title, description, book_id) =>
-		ipcRenderer.invoke("tasks:add", title, description, book_id),
-	markComplete: (id, isComplete) =>
-        ipcRenderer.invoke("tasks:markComplete", id, isComplete),
+	addTask: (task, book_id) =>
+        ipcRenderer.invoke("tasks:add", task, book_id),
+
+	markChecked: (id, isComplete) =>
+        ipcRenderer.invoke("tasks:markChecked", id, isComplete),
     
     deleteTasks: (id) => ipcRenderer.invoke("tasks:delete", id),
     
-	getAllTasks: () => ipcRenderer.invoke("tasks:getAll"),
+	getAllTasksFromBook: (book_id) => ipcRenderer.invoke("tasks:getAllFromBook", book_id),
 });

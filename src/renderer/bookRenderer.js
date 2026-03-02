@@ -1,6 +1,11 @@
 import { showTooltip } from "./uiHelpers.js";
 
-function openBook(book) {
+async function getAllBooks() {
+	const books = await window.books.getAllBook();
+	return books;
+}
+
+async function openBook(book) {
 	let overlay = document.querySelector(".open-book-overlay");
 
 	if (!overlay) {
@@ -9,39 +14,193 @@ function openBook(book) {
 		overlay.innerHTML = `
 			<div class="open-book-content">
 				<h2 class="open-book-title">${book.name}</h2>
-				<img
-					src="/minecraft_open_book.png"
-					alt="Open book"
-					class="open-book-image"
-				/>
-				<div class="open-book-close mc-button">
-					<div class="title">Close</div>
+				<div class="tasks-container">
+						<div class="page-number">
+							Page
+							<span class="currentPage">1</span>
+							of <span class="totalPage">1</span> 
+						</div>
+						<div class="tasks-list"></div>
+						<input type="text" placeholder="Add a task..." 	class="task-input"/>
+						<div class="change-page">
+							<img class="prev-page" src="/next_page.png"/>
+							<img class="next-page" src="/next_page.png"/>
+						</div>
+				</div>
+				<div class="open-book-close mc-button"> 
+					<div class="title">
+						close
+					</div>
 				</div>
 			</div>
 		`;
 		document.body.appendChild(overlay);
+
+		const tasksList = overlay.querySelector(".tasks-list");
+
+		const addTaskToList = (task) => {
+			const taskItem = document.createElement("div");
+			taskItem.className = "task-item";
+			taskItem.innerHTML = `
+				<label class="task-item-content">
+					<input 
+						type="checkbox" 
+						class="task-checkbox" 
+						${task.isChecked ? "checked" : ""} 
+					/>
+					<span class="task-text" title="${task.task}">
+						${task.task}
+					</span>
+				</label>
+			`;
+
+			const checkbox = taskItem.querySelector(".task-checkbox");
+
+			if (task.isChecked) {
+				taskItem.classList.add("task-completed");
+			}
+
+			checkbox.addEventListener("change", async (event) => {
+				const isChecked = event.target.checked ? 1 : 0;
+				await window.books.markChecked(task.id, isChecked);
+				taskItem.classList.toggle("task-completed", event.target.checked);
+			});
+
+			tasksList.appendChild(taskItem);
+		};
+
+		const renderTasks = (tasks) => {
+			if (!tasksList) return;
+			
+			const totalPage = Math.ceil(tasks.length / 16);
+			overlay.querySelector(".totalPage").textContent = totalPage===0?1:totalPage;
+			
+
+
+			tasksList.innerHTML = "";
+			tasks.forEach((task) => {
+				addTaskToList(task);
+			});
+		};
+
+		const tasks = (await window.books.getAllTasksFromBook(book.id)).reverse();
+		renderTasks(tasks);
 
 		const closeBtn = overlay.querySelector(".open-book-close");
 		closeBtn.addEventListener("click", () => {
 			overlay.remove();
 		});
 
-		overlay.addEventListener("click", (event) => {
-			if (event.target === overlay) {
+		const inputTask = overlay.querySelector(".task-input");
+		inputTask.addEventListener("keydown", async (event) => {
+			if (event.key === "Enter") {
+				const addedTask = await window.books.addTask(inputTask.value, book.id);
+				inputTask.value = "";
+				addTaskToList(addedTask)
+			}
+		});
+
+		window.addEventListener("keydown", (event) => {
+			if (event.key === "Escape") {
 				overlay.remove();
 			}
 		});
 	}
 }
 
-function renderBookPixels(book, bookPixels, pixelColors) {
+const addBookPopUp = async () => {
+	const popup = document.createElement("div");
+	popup.className = "popup-bg";
+	popup.innerHTML = `
+		<div class="popup">
+			<div class="popup-title">Add New Book</div>
+			<input type="text" class="popup-input" placeholder="Book Title" autofocus />
+			<div class="popup-actions">
+				<div class="popup-ok mc-button"><div class="title">OK</div></div>
+				<div class="popup-cancel mc-button"><div class="title">Cancel</div></div>
+			</div>
+		</div>
+	`;
+	document.body.appendChild(popup);
+	const input = popup.querySelector(".popup-input");
+	const okBtn = popup.querySelector(".popup-ok");
+	const cancelBtn = popup.querySelector(".popup-cancel");
+	okBtn.addEventListener("click", async () => {
+		const title = input.value.trim();
+		if (title) {
+			await window.books.addBook(title);
+			renderBooks();
+			document.body.removeChild(popup);
+		} else {
+			input.focus();
+		}
+	});
+	cancelBtn.addEventListener("click", () => {
+		document.body.removeChild(popup);
+	});
+	input.addEventListener("keydown", (e) => {
+		if (e.key === "Enter") okBtn.click();
+		if (e.key === "Escape") cancelBtn.click();
+	});
+};
+
+const deleteBookPopup = async () => {
+	const books = (await getAllBooks()).reverse();
+
+	const popup = document.createElement("div");
+	popup.className = "popup-bg";
+	popup.innerHTML = `
+    <div class="popup">
+		<div class="popup-title">Delete Book</div>
+		<div class="popup-list">
+        ${
+			books.length === 0
+				? "<div>No books available.</div>"
+				: books
+						.map(
+							(book) => `
+		<div class="popup-book-item">
+            <span>${book.name}</span>
+            <div class="popup-delete mc-button" data-idx="${book.id}">
+				<div class="title">Delete</div>
+			</div>
+        </div>
+        `,
+						)
+						.join("")
+		}
+    </div>
+    <div class="popup-actions">
+        <div class="popup-cancel mc-button">
+			<div class="title">Cancel</div>
+		</div>
+    </div>
+    </div>
+	`;
+	document.body.appendChild(popup);
+	const cancelBtn = popup.querySelector(".popup-cancel");
+	cancelBtn.addEventListener("click", () => {
+		document.body.removeChild(popup);
+	});
+	popup.querySelectorAll(".popup-delete").forEach((btn) => {
+		btn.addEventListener("click", async () => {
+			const id = btn.getAttribute("data-idx");
+
+			await window.books.deleteBook(id);
+			document.body.removeChild(popup);
+			renderBooks();
+		});
+	});
+};
+
+async function renderBookPixels(book, bookPixels, pixelColors) {
 	for (let i = 0; i < bookPixels.length; i++) {
 		bookPixels[i].style.backgroundColor = pixelColors[i];
 	}
 
 	bookPixels.forEach((pixel) => {
-		pixel.addEventListener("click", () => {
-			openBook(book);
+		pixel.addEventListener("click", async () => {
+			await openBook(book);
 		});
 	});
 
@@ -412,11 +571,53 @@ function renderSixthBook(book) {
 	renderBookPixels(book, bookPixels, pixelColors);
 }
 
-export {
-	renderFirstBook,
-	renderSecondBook,
-	renderThirdBook,
-	renderForthBook,
-	renderFifthBook,
-	renderSixthBook,
-};
+function clearBookshelf() {
+	const pixels = document.querySelectorAll(".bookshelf div");
+	pixels.forEach((pixel) => {
+		pixel.style.backgroundColor = "";
+		const clone = pixel.cloneNode(false);
+		pixel.replaceWith(clone);
+	});
+}
+
+async function renderBooks() {
+	const books = await getAllBooks();
+	clearBookshelf();
+	switch (books.length) {
+		case 1:
+			renderFirstBook(books[0]);
+			break;
+		case 2:
+			renderFirstBook(books[1]);
+			renderSecondBook(books[0]);
+			break;
+		case 3:
+			renderFirstBook(books[2]);
+			renderSecondBook(books[1]);
+			renderThirdBook(books[0]);
+			break;
+		case 4:
+			renderFirstBook(books[3]);
+			renderSecondBook(books[2]);
+			renderThirdBook(books[1]);
+			renderForthBook(books[0]);
+			break;
+		case 5:
+			renderFirstBook(books[4]);
+			renderSecondBook(books[3]);
+			renderThirdBook(books[2]);
+			renderForthBook(books[1]);
+			renderFifthBook(books[0]);
+			break;
+		case 6:
+			renderFirstBook(books[5]);
+			renderSecondBook(books[4]);
+			renderThirdBook(books[3]);
+			renderForthBook(books[2]);
+			renderFifthBook(books[1]);
+			renderSixthBook(books[0]);
+			break;
+	}
+}
+
+export { renderBooks, addBookPopUp, deleteBookPopup };
