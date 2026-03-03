@@ -4,6 +4,9 @@
 	"version": "1.0.0",
 	"description": "My Electron application description",
 	"main": ".vite/build/main.js",
+	"build": {
+		"appId": "com.arnav.book_quill"
+	},
 	"private": true,
 	"config": {
 		"forge": {
@@ -29,14 +32,14 @@
 								"base": "app.book_quill.to",
 								"base-version": "stable"
 							},
-              "icon": "/images/icon.png"
+							"icon": "/images/icon.png"
 						}
 					}
 				},
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
+				{
+					"name": "@electron-forge/maker-rpm",
+					"config": {}
+				}
 			]
 		}
 	},
@@ -45,7 +48,10 @@
 		"package": "electron-forge package",
 		"make": "electron-forge make",
 		"publish": "electron-forge publish",
-		"lint": "echo \"No linting configured\""
+		"lint": "echo \"No linting configured\"",
+		"dist-windows": "electron-builder --win --x64",
+		"dist-mac": "electron-builder --mac --arm64",
+		"dist-linux": "electron-builder --linux --x64"
 	},
 	"keywords": [],
 	"author": {
@@ -65,6 +71,7 @@
 		"@electron-forge/plugin-vite": "^7.11.1",
 		"@electron/fuses": "^1.8.0",
 		"electron": "40.6.0",
+		"electron-builder": "^26.8.1",
 		"vite": "^5.4.21"
 	},
 	"dependencies": {
