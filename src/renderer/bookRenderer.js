@@ -7,11 +7,11 @@ async function getAllBooks() {
 
 async function openBook(book) {
 	let overlay = document.querySelector(".open-book-overlay");
+	if (overlay) return;
 
-	if (!overlay) {
-		overlay = document.createElement("div");
-		overlay.className = "open-book-overlay";
-		overlay.innerHTML = `
+	overlay = document.createElement("div");
+	overlay.className = "open-book-overlay";
+	overlay.innerHTML = `
 			<div class="open-book-content">
 				<h2 class="open-book-title">${book.name}</h2>
 				<div class="tasks-container">
@@ -34,78 +34,143 @@ async function openBook(book) {
 				</div>
 			</div>
 		`;
-		document.body.appendChild(overlay);
+	document.body.appendChild(overlay);
 
-		const tasksList = overlay.querySelector(".tasks-list");
+	const tasksList = overlay.querySelector(".tasks-list");
+	const inputTask = overlay.querySelector(".task-input");
+	const totalPageEl = overlay.querySelector(".totalPage");
+	const currentPageEl = overlay.querySelector(".currentPage");
+	const nextPageBtn = overlay.querySelector(".next-page");
+	const prevPageBtn = overlay.querySelector(".prev-page");
+	const TASKS_PER_PAGE = 18;
 
-		const addTaskToList = (task) => {
-			const taskItem = document.createElement("div");
-			taskItem.className = "task-item";
-			taskItem.innerHTML = `
+	const addTaskToList = (task) => {
+		const taskItem = document.createElement("div");
+		taskItem.className = "task-item";
+		taskItem.innerHTML = `
 				<label class="task-item-content">
-					<input 
-						type="checkbox" 
-						class="task-checkbox" 
-						${task.isChecked ? "checked" : ""} 
-					/>
-					<span class="task-text" title="${task.task}">
-						${task.task}
-					</span>
+					<div class="task-wrapper">
+						<input 
+							type="checkbox" 
+							class="task-checkbox" 
+							${task.isChecked ? "checked" : ""} 
+						/>
+						<span class="task-text" title="${task.task}">
+							${task.task}
+						</span>
+					</div>
+					<span class="delete-task-button">x</span>
 				</label>
 			`;
 
-			const checkbox = taskItem.querySelector(".task-checkbox");
+		const checkbox = taskItem.querySelector(".task-checkbox");
 
-			if (task.isChecked) {
-				taskItem.classList.add("task-completed");
+		if (task.isChecked) {
+			taskItem.classList.add("task-completed");
+		}
+
+		checkbox.addEventListener("change", async (event) => {
+			const isChecked = event.target.checked ? 1 : 0;
+			await window.books.markChecked(task.id, isChecked);
+			taskItem.classList.toggle("task-completed", event.target.checked);
+		});
+
+		const deleteButton = taskItem.querySelector(".delete-task-button");
+		deleteButton.addEventListener("click", async () => {
+			await window.books.deleteTask(task.id);
+			await refreshTasks();
+		});
+
+		tasksList.appendChild(taskItem);
+	};
+
+	let tasks = (await window.books.getAllTasksFromBook(book.id)).reverse();
+	let actualTotalPage = 1;
+	let totalPage = 1; // includes optional extra empty page
+
+	const renderTasks = (allTasks, currentPage) => {
+		if (!tasksList) return;
+		tasksList.innerHTML = "";
+		currentPage >= totalPage
+			? (nextPageBtn.style.visibility = "hidden")
+			: (nextPageBtn.style.visibility = "visible");
+
+		currentPage <= 1
+			? (prevPageBtn.style.visibility = "hidden")
+			: (prevPageBtn.style.visibility = "visible");
+
+		currentPageEl.textContent = currentPage;
+
+		const start = (currentPage - 1) * TASKS_PER_PAGE;
+		const end = start + TASKS_PER_PAGE;
+		const pageTasks = allTasks.slice(start, end);
+
+		inputTask.style.display = pageTasks.length >= TASKS_PER_PAGE ? "none" : "";
+
+		pageTasks.forEach((task) => {
+			addTaskToList(task);
+		});
+	};
+
+	let currentPage = 1;
+	const refreshTasks = async () => {
+		tasks = (await window.books.getAllTasksFromBook(book.id)).reverse();
+		actualTotalPage = Math.max(1, Math.ceil(tasks.length / TASKS_PER_PAGE));
+		const hasExtraEmptyPage =
+			tasks.length > 0 && tasks.length % TASKS_PER_PAGE === 0;
+		totalPage = actualTotalPage + (hasExtraEmptyPage ? 1 : 0);
+		totalPageEl.textContent = totalPage;
+
+		if (currentPage > totalPage) currentPage = totalPage;
+		if (currentPage < 1) currentPage = 1;
+
+		renderTasks(tasks, currentPage);
+	};
+
+	nextPageBtn.addEventListener("click", () => {
+		if (currentPage < totalPage) currentPage += 1;
+		renderTasks(tasks, currentPage);
+	});
+
+	prevPageBtn.addEventListener("click", () => {
+		if (currentPage > 1) currentPage -= 1;
+		renderTasks(tasks, currentPage);
+	});
+	await refreshTasks();
+
+	const closeBtn = overlay.querySelector(".open-book-close");
+	closeBtn.addEventListener("click", () => {
+		overlay.remove();
+	});
+
+	inputTask.addEventListener("keydown", async (event) => {
+		if (event.key === "Enter") {
+			const value = inputTask.value.trim();
+			if (!value) return;
+			const addedTask = await window.books.addTask(
+				value,
+				book.id,
+			);
+			inputTask.value = "";
+			await refreshTasks();
+
+			// If the current page just got filled, move to the next (empty) page
+			// so the input stays available for continued entry.
+			const start = (currentPage - 1) * TASKS_PER_PAGE;
+			const end = start + TASKS_PER_PAGE;
+			const pageTasksCount = tasks.slice(start, end).length;
+			if (pageTasksCount >= TASKS_PER_PAGE && currentPage < totalPage) {
+				currentPage += 1;
+				renderTasks(tasks, currentPage);
 			}
+		}
+	});
 
-			checkbox.addEventListener("change", async (event) => {
-				const isChecked = event.target.checked ? 1 : 0;
-				await window.books.markChecked(task.id, isChecked);
-				taskItem.classList.toggle("task-completed", event.target.checked);
-			});
-
-			tasksList.appendChild(taskItem);
-		};
-
-		const renderTasks = (tasks) => {
-			if (!tasksList) return;
-			
-			const totalPage = Math.ceil(tasks.length / 16);
-			overlay.querySelector(".totalPage").textContent = totalPage===0?1:totalPage;
-			
-
-
-			tasksList.innerHTML = "";
-			tasks.forEach((task) => {
-				addTaskToList(task);
-			});
-		};
-
-		const tasks = (await window.books.getAllTasksFromBook(book.id)).reverse();
-		renderTasks(tasks);
-
-		const closeBtn = overlay.querySelector(".open-book-close");
-		closeBtn.addEventListener("click", () => {
+	window.addEventListener("keydown", (event) => {
+		if (event.key === "Escape") {
 			overlay.remove();
-		});
-
-		const inputTask = overlay.querySelector(".task-input");
-		inputTask.addEventListener("keydown", async (event) => {
-			if (event.key === "Enter") {
-				const addedTask = await window.books.addTask(inputTask.value, book.id);
-				inputTask.value = "";
-				addTaskToList(addedTask)
-			}
-		});
-
-		window.addEventListener("keydown", (event) => {
-			if (event.key === "Escape") {
-				overlay.remove();
-			}
-		});
-	}
+		}
+	});
 }
 
 const addBookPopUp = async () => {
