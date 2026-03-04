@@ -2,47 +2,12 @@
 	"name": "book_quill",
 	"productName": "book_quill",
 	"version": "1.0.0",
-	"description": "My Electron application description",
+	"description": "A Todo list app based on Minecraft theme",
 	"main": ".vite/build/main.js",
 	"build": {
 		"appId": "com.arnav.book_quill"
 	},
 	"private": true,
-	"config": {
-		"forge": {
-			"makers": [
-				{
-					"name": "@electron-forge/maker-squirrel",
-					"config": {}
-				},
-				{
-					"name": "@electron-forge/maker-zip",
-					"platforms": [
-						"darwin"
-					]
-				},
-				{
-					"name": "@electron-forge/maker-flatpak",
-					"config": {
-						"config": {
-							"options": {
-								"categories": [
-									"Office"
-								],
-								"base": "app.book_quill.to",
-								"base-version": "stable"
-							},
-							"icon": "/images/icon.png"
-						}
-					}
-				},
-				{
-					"name": "@electron-forge/maker-rpm",
-					"config": {}
-				}
-			]
-		}
-	},
 	"scripts": {
 		"dev": "electron-forge start",
 		"package": "electron-forge package",
