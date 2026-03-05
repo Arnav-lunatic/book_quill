@@ -23,8 +23,8 @@ async function openBook(book) {
 						<div class="tasks-list"></div>
 						<input type="text" placeholder="Add a task..." 	class="task-input"/>
 						<div class="change-page">
-							<img class="prev-page" src="/next_page.png"/>
-							<img class="next-page" src="/next_page.png"/>
+							<img class="prev-page"/>
+							<img class="next-page"/>
 						</div>
 				</div>
 				<div class="open-book-close mc-button"> 

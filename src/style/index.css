@@ -324,6 +324,7 @@ body {
 
 .prev-page,
 .next-page {
+	content: url("/next_page.png");
 	transition:
 		transform 0.15s ease-out,
 		filter 0.15s ease-out,
